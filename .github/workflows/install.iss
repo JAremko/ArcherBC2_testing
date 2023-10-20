@@ -6,7 +6,7 @@
 #define MyAppExeName "ArcherBC2_testing.exe"
 
 [Setup]
-AppId=B2FDF84F-18BD-42B8-BD20-E645771D291T
+AppId=B2FDF84F-18BD-42B8-BD20-E645771D2911
 AppName={#MyAppName}
 AppVersion={#MyAppVersion}
 AppPublisher={#MyAppPublisher}
@@ -14,7 +14,7 @@ AppPublisherURL={#MyAppURL}
 AppSupportURL={#MyAppURL}
 AppUpdatesURL={#MyAppURL}
 DefaultDirName={userappdata}\ArcherBC2_testing
-ChangesAssociations=no    ; Set this to 'no' to avoid changing file associations
+ChangesAssociations=no
 DisableProgramGroupPage=yes
 PrivilegesRequired=lowest
 OutputBaseFilename=ArcherBC2_install_testing

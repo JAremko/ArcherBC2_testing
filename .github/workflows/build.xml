@@ -3,7 +3,7 @@
   <dontWrapJar>true</dontWrapJar>
   <headerType>gui</headerType>
   <jar>profedit.jar</jar>
-  <outfile>/home/runner/work/ArcherBC2/ArcherBC2/target/ArcherBC2.exe</outfile>
+  <outfile>/home/runner/work/ArcherBC2_testing/ArcherBC2_testing/target/ArcherBC2_testing.exe</outfile>
   <errTitle></errTitle>
   <cmdLine></cmdLine>
   <chdir>.</chdir>
@@ -13,7 +13,7 @@
   <stayAlive>false</stayAlive>
   <restartOnCrash>false</restartOnCrash>
   <manifest></manifest>
-  <icon>/home/runner/work/ArcherBC2/ArcherBC2/.github/workflows/icon.ico</icon>
+  <icon>/home/runner/work/ArcherBC2_testing/ArcherBC2_testing/.github/workflows/icon.ico</icon>
   <singleInstance>
     <mutexName>archerbc2mutex</mutexName>
   </singleInstance>
@@ -28,7 +28,7 @@
     <opt>-Xms350m</opt>
   </jre>
   <splash>
-    <file>/home/runner/work/ArcherBC2/ArcherBC2/.github/workflows/ball.bmp</file>
+    <file>/home/runner/work/ArcherBC2_testing/ArcherBC2_testing/.github/workflows/ball.bmp</file>
     <waitForWindow>true</waitForWindow>
     <timeout>60</timeout>
     <timeoutErr>true</timeoutErr>
