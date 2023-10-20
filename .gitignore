@@ -1,0 +1,97 @@
+# Created by https://www.gitignore.io/api/emacs,clojure
+
+### Clojure ###
+pom.xml
+pom.xml.asc
+*.jar
+*.class
+/classes/
+/target/
+/checkouts/
+.lein-deps-sum
+.lein-repl-history
+.lein-plugins/
+.lein-failures
+.nrepl-port
+.cpcache/
+/.github/workflows/updater/target/
+### Emacs ###
+# -*- mode: gitignore; -*-
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# Org-mode
+.org-id-locations
+*_archive
+
+# flymake-mode
+*_flymake.*
+
+# eshell files
+/eshell/history
+/eshell/lastdir
+
+# elpa packages
+/elpa/
+
+# reftex files
+*.rel
+
+# AUCTeX auto folder
+/auto/
+
+# cask packages
+.cask/
+dist/
+
+# Flycheck
+flycheck_*.el
+
+# server auth directory
+/server/
+
+# projectiles files
+.projectile
+
+# End of https://www.gitignore.io/api/emacs,clojure
+/clj-kondo
+**/.clj-kondo/.cache
+performance.txt
+clj-kondo*.snap
+.planck_cache
+
+# IntelliJ
+.idea
+*.iml
+
+.DS_Store
+!corpus/**/*.jar
+!corpus/java/classes/foo/bar/AwesomeClass.class
+corpus/config_dir/.cache
+/.clj-kondo/clj-kondo
+/.lsp/.cache
+clj-kondo.build_artifacts.txt
+/.clj-kondo/rewrite-clj
+.clj-kondo/marick
+corpus/namespace_config/.clj-kondo/inline-configs
+.lock
+corpus/.clj-kondo/inline-configs
+tmp
+.eastwood
+
+
+
+#Proto
+
+/src/java/profedit/*.jar
+
+
+# Pinned deps
+!/lib/**
+!/lib/**/*.jar

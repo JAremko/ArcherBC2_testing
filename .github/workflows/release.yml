@@ -1,0 +1,210 @@
+name: Clojure CI
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  download_firmware:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 1
+
+    strategy:
+      matrix:
+        firmware:
+          - {name: "Archer FALCON", version: "0.18"}
+          - {name: "Archer FALCON", version: "0.17"}
+
+    steps:
+    - name: Fetch firmware using SigV4 signed request
+      env:
+        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      run: |
+        # Encoding to base64 and then converting to URL-safe
+        encoded_name=$(echo -n "${{ matrix.firmware.name }}" | base64 | tr '+/' '-_')
+        encoded_version=$(echo -n "${{ matrix.firmware.version }}" | base64 | tr '+/' '-_')
+
+        # Making directories based on encoded values within the "firmware" parent folder
+        mkdir -p "firmware/$encoded_name/$encoded_version"
+
+        url="https://aelrii29fl.execute-api.eu-central-1.amazonaws.com/archerbc2_get_release"
+        curl --fail --request POST "$url" \
+             --user "$AWS_ACCESS_KEY_ID:$AWS_SECRET_ACCESS_KEY" \
+             --aws-sigv4 "aws:amz:eu-central-1:execute-api" \
+             --header 'Content-Type: application/json' \
+             --data "{\"Firmware\": \"${{ matrix.firmware.name }}::${{ matrix.firmware.version }}\"}" \
+             -o "firmware/$encoded_name/$encoded_version/CS10.upg"
+
+    - name: Upload firmware as artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: firmware-artifact
+        path: ./firmware/
+
+  build:
+    runs-on: ubuntu-22.04
+    needs: download_firmware
+    timeout-minutes: 5
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Download firmware artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: firmware-artifact
+        path: resources/firmware
+
+    - name: Set up JDK x64
+      uses: actions/setup-java@v2
+      with:
+        distribution: zulu
+        architecture: x64
+        java-package: jdk
+        java-version: 8
+
+    - name: Convert .properties files
+      run: |
+        find loc -name '*.properties' -exec sh -c '
+        for file do
+          base=$(basename "$file")
+          native2ascii "$file" "resources/tvt/a7/profedit/${base}"
+        done' sh {} +
+
+    - name: Set environment for github-release
+      run: |
+        echo "RELEASE_TAG=$(grep -m1 'defproject' project.clj | awk '{print $3}' | tr -d '\"')" >> $GITHUB_ENV
+        echo "RELEASE_NAME=$GITHUB_WORKFLOW" >> $GITHUB_ENV
+
+    - name: Save current version in the resources
+      run: echo "${{ env.RELEASE_TAG }}" > resources/version.txt
+
+# NOTE: We generate it manually to avoid extra downloads in CI
+#    - name: Gen proto
+#      run: lein protodeps generate
+
+    - name: Extract Launch4j
+      run: |
+        tar -xzf .github/workflows/launch4j-3.13-linux-x64.tgz
+        chmod +x launch4j/launch4j
+
+    - name: Uberjar for Updater
+      run: |
+        cd .github/workflows/updater
+        lein uberjar
+        mv ./update.bat ../../..
+        mv ./target/update.jar ../../..
+
+    - name: Uberjar and Create Windows executable for Profedit
+      run: |
+        cp update.jar ./resources/
+        lein uberjar
+        launch4j/launch4j .github/workflows/build.xml
+        mv target/profedit.jar ./
+        mv target/ArcherBC2_testing.exe ./
+
+    - name: Set win32 archive name for github-release
+      run: |
+        echo "WIN32_ZIP_NAME=win32_${{ env.RELEASE_TAG }}.zip" >> $GITHUB_ENV
+
+    - name: Package executables and assets
+      run: |
+        wget -q https://cdn.azul.com/zulu/bin/zulu8.54.0.21-ca-jre8.0.292-win_i686.zip
+        unzip zulu8.54.0.21-ca-jre8.0.292-win_i686.zip -d /tmp/jre
+        mkdir -p runtime
+        mv /tmp/jre/*/* runtime
+        zip -r ${{ env.WIN32_ZIP_NAME }} update.bat update.jar profedit.jar runtime skins ArcherBC2_testing.exe
+
+    - name: Upload build artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: package-artifacts
+        path: |
+          ./update.bat
+          ./update.jar
+          ./profedit.jar
+          ./runtime
+          ./skins
+          ./ArcherBC2_testing.exe
+          ./${{ env.WIN32_ZIP_NAME }}
+
+    outputs:
+      release_tag: ${{ env.RELEASE_TAG }}
+      win32_zip_name: ${{ env.WIN32_ZIP_NAME }}
+
+  setup_innosetup:
+    needs: build
+    runs-on: windows-latest
+    timeout-minutes: 5
+
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Download build artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: package-artifacts
+        path: ./src
+
+    - name: Install Inno Setup
+      id: install-inno
+      run: |
+        choco install innosetup --version=5.6.1 --yes --allow-downgrade
+
+    - name: Build Installer
+      run: |
+        $Env:ISCC_PATH="${env:ProgramFiles(x86)}\Inno Setup 5\ISCC.exe"
+        $Env:APP_VERSION="${{ needs.build.outputs.release_tag }}"
+        $Env:SRC="${{ github.workspace }}\src"
+        & "$Env:ISCC_PATH" /Qp "${{ github.workspace }}\.github\workflows\install.iss"
+      shell: pwsh
+      
+    - name: Debug file structure
+      run: |
+        cd ./src
+        Get-ChildItem
+      shell: pwsh
+      
+    - name: Copy installer
+      run: |
+        Copy-Item "${{ github.workspace }}\src\ArcherBC2_install_testing.exe" "${{ github.workspace }}\"
+      shell: pwsh
+
+    - name: Upload installer artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: inno-setup-artifact
+        path: |
+          ArcherBC2_install_testing.exe
+
+  release:
+    needs: [build, setup_innosetup]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+    - name: Download build artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: package-artifacts
+        path: ./src
+
+    - name: Download Inno Setup artifact
+      uses: actions/download-artifact@v2
+      with:
+        name: inno-setup-artifact
+        path: ./Output
+
+    - name: Create a Release
+      uses: meeDamian/github-release@2.0
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag: ${{ needs.build.outputs.release_tag }}
+        gzip: false
+        files: >
+          ./src/${{ needs.build.outputs.win32_zip_name }}
+          ./src/profedit.jar
+          ./Output/ArcherBC2_install_testing.exe
+        allow_override: true
