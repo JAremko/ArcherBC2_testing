@@ -23,9 +23,9 @@
 
 
 (def fail-string (str "Update failed! Please download latest "
-                      "ArcherBC2_install.exe and reinstall the program:\n"
+                      "ArcherBC2_install_testing.exe and reinstall the program:\n"
                       "https://github.com/JAremko/ArcherBC2_testing"
-                      "/releases/latest/download/ArcherBC2_install.exe"))
+                      "/releases/latest/download/ArcherBC2_install_testing.exe"))
 
 
 (def download-url (str "https://github.com/"
