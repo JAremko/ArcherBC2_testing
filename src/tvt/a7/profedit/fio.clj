@@ -273,7 +273,7 @@
            :device name_device
            :serial serial_number
            :version firmware
-           :device-class device_class
+           :device-class (or device_class name_device)
            :path (.getAbsolutePath dir)
            :profiles (profile-names-in-dir (io/file dir "profiles"))})))
     (catch Exception _ nil)))
