@@ -27,7 +27,7 @@
            [java.io File]
            [java.awt AWTEvent]
            [java.awt.event KeyEvent]
-           [javax.swing JFormattedTextField JComponent JFileChooser]))
+           [javax.swing JFormattedTextField JComponent JFileChooser JList]))
 
 
 (defn opts-on-nonempty-input [widget opts]
@@ -578,7 +578,7 @@
    :export {:actions (constantly :copy)
             :start (fn [_]
                      [dnd/string-flavor
-                      {:index (.getSelectedIndex ^javax.swing.JList lb)}])}))
+                      {:index (.getSelectedIndex ^JList lb)}])}))
 
 
 (defn distances-listbox
@@ -597,11 +597,13 @@
     lb))
 
 
-(defn- add-dist [dist old-dists]
-  (let [new-dists (into [dist] old-dists)]
-    (if (s/valid? ::prof/distances new-dists)
+(defn- add-dist [dist idx old-dists]
+  (let [new-dists (concat (subvec old-dists 0 idx)
+                          [dist]
+                          (subvec old-dists idx))]
+    (if (s/valid? ::prof/distances (vec new-dists))
       (do (prof/status-ok! ::distance-added-msg)
-          new-dists)
+          (vec new-dists))
       (do (prof/status-err! ::dist-limit-msg)
           old-dists))))
 
@@ -618,25 +620,39 @@
                   wrapped-fmt
                   wrapped-fmt)
         jf (ssc/construct JFormattedTextField fmtr)
-        commit (fn [_]
-                 (.commitEdit ^JFormattedTextField jf)
-                 (ssc/invoke-later
-                  (let [new-val (round-to (.getValue ^JFormattedTextField jf)
-                                          fraction-digits)
-                        up-fn (fn [state]
-                                (let [prof-sel (fn [suf] [:profile suf])]
-                                  (-> state
+        commit
+        (fn [e]
+          (.commitEdit ^JFormattedTextField jf)
+          (ssc/invoke-later
+           (let [new-val (round-to (.getValue ^JFormattedTextField jf)
+                                   fraction-digits)
+                 up-fn (fn [state]
+                         (let [prof-sel (fn [suf] [:profile suf])
+                               d-lb (ssc/select (ssc/to-root e)
+                                                [:#distance-list])
+                               s-idx (max (.getSelectedIndex ^JList d-lb) 0)
+                               c-idx (get-in state
+                                             (prof-sel
+                                              :c-zero-distance-idx))
+                               rv (-> state
                                       (update-in (prof-sel :distances)
-                                                 (partial add-dist new-val))
+                                                 (partial add-dist new-val s-idx))
                                       (update-in (prof-sel :c-zero-distance-idx)
-                                                 inc))))]
-                    (.setText jf (val->str new-val fraction-digits))
-                    (if (s/valid? spec new-val)
-                      (swap! *state up-fn)
-                      (prof/status-err!
-                       (format (j18n/resource ::imput-dist-range-err)
-                               (str min-v)
-                               (str max-v)))))))
+                                                 (if (>= c-idx s-idx)
+                                                   inc identity)))]
+                           (ssc/invoke-later
+                            (doto ^JList d-lb
+                              (.setSelectedIndex s-idx)
+                              (.ensureIndexIsVisible s-idx))
+                            (ssc/request-focus! d-lb))
+                           rv))]
+             (.setText jf (val->str new-val fraction-digits))
+             (if (s/valid? spec new-val)
+               (swap! *state up-fn)
+               (prof/status-err!
+                (format (j18n/resource ::imput-dist-range-err)
+                        (str min-v)
+                        (str max-v)))))))
         tooltip-text (format (j18n/resource ::input-dist-tip)
                              (str min-v)
                              (str max-v))
