@@ -862,9 +862,11 @@
                                            *state
                                            (ssc/to-root e))
                                     (ssc/invoke-later
-                                     (ssc/request-focus! e)
-                                     (fio/load-from! *state f))
-                                    (reset-tree-selection file-tree)))))))]
+                                     (fio/load-from! *state f)
+                                     (ssc/request-focus! e))
+                                    (ssc/invoke-later
+                                      (reset-tree-selection file-tree)
+                                      (ssc/request-focus! e))))))))]
 
     (ssc/invoke-later (ssb/bind fio/*profile-storages
                                 (ssb/transform
