@@ -6,8 +6,7 @@
             [tvt.a7.profedit.config :as conf]
             [dk.ative.docjure.spreadsheet :as sp]
             [j18n.core :as j18n]
-            [clojure.spec.alpha :as s]
-            [tvt.a7.profedit.fio :as fio])
+            [clojure.spec.alpha :as s])
   (:import [javax.swing JList]))
 
 
@@ -20,23 +19,28 @@
                                            [:c-zero-distance-idx])]
                                (= zd-idx dist-idx)))]
      (if (> idx -1)
-       (swap! *state
-              (fn [state]
-                (let [cur-val (prof/get-in-prof state [:distances])
-                      new-val (into (subvec cur-val 0 idx)
-                                    (subvec cur-val (inc idx)))
-                      cur-zidx (prof/get-in-prof state [:c-zero-distance-idx])
-                      new_zidx (if (> cur-zidx idx) (dec cur-zidx) cur-zidx)]
-                  (if (zeroing-dist-idx? state idx)
-                    (do (prof/status-err! ::del-sel-cant-delete)
-                        state)
-                    (do (prof/status-ok! ::del-sel-distance-deleted)
-                        (-> state
-                            (prof/assoc-in-prof [:c-zero-distance-idx] new_zidx)
-                            (prof/assoc-in-prof [:distances] new-val)))))))
+       (do (swap! *state
+                  (fn [state]
+                    (let [cur-val (prof/get-in-prof state [:distances])
+                          new-val (into (subvec cur-val 0 idx)
+                                        (subvec cur-val (inc idx)))
+                          cur-zidx (prof/get-in-prof state [:c-zero-distance-idx])
+                          new_zidx (if (> cur-zidx idx) (dec cur-zidx) cur-zidx)]
+                      (if (zeroing-dist-idx? state idx)
+                        (do (prof/status-err! ::del-sel-cant-delete)
+                            state)
+                        (do (prof/status-ok! ::del-sel-distance-deleted)
+                            (-> state
+                                (prof/assoc-in-prof [:c-zero-distance-idx]
+                                                    new_zidx)
+                                (prof/assoc-in-prof [:distances]
+                                                    new-val)))))))
+           (sc/invoke-later
+            (doto ^JList d-lb
+              (.setSelectedIndex idx)
+              (.ensureIndexIsVisible idx))
+            (sc/request-focus! d-lb)))
        (prof/status-err! ::del-sel-select-for-deletion)))))
-
-
 
 
 #_(defn mk-firmware-update-dialogue
@@ -60,7 +64,6 @@
          (fio/copy-newest-firmware entry)
          (sc/alert frame (j18n/resource ::firmware-uploaded) :type :info)
          (catch Exception e (sc/alert frame (.getMessage e) :type :error)))))))
-
 
 (defn- dist-swapper [state distances]
   (let [zero-dist (nth (prof/get-in-prof state [:distances])
