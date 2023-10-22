@@ -30,7 +30,10 @@
                  [clj-commons/fs "1.6.307"]
                  [toml "0.1.4"]
                  [com.github.weisj/darklaf-core "3.0.2"]
-                 [dk.ative/docjure "1.19.0"]]
+                 [org.apache.logging.log4j/log4j-core "2.21.0"]
+                 [dk.ative/docjure "1.19.0"
+                   :exclusions [commons-io
+                                org.apache.commons/commons-compress]]]
 
   :uberjar-name "profedit.jar"
 

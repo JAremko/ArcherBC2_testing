@@ -14,9 +14,9 @@
             [seesaw.tree :as sst]
             [seesaw.color :refer [default-color color]]
             [seesaw.dnd :as dnd]
+            [dk.ative.docjure.spreadsheet :as sp]
             [clojure.string :as string]
-            [j18n.core :as j18n]
-            [dk.ative.docjure.spreadsheet :as sp])
+            [j18n.core :as j18n])
   (:import [javax.swing.text
             DefaultFormatterFactory
             DefaultFormatter]
@@ -451,47 +451,6 @@
    :type :open
    :filters (chooser-f-prof)
    :success-fn (fn [_ file] (fio/load-from! *state file))))
-
-(defn- chooser-f-excel []
-  [[(j18n/resource ::chooser-f-excel) ["xls" "xlsx"]]])
-
-
-(defn load-excel-from-chooser []
-  (chooser/choose-file
-   :all-files? false
-   :type :open
-   :filters (chooser-f-excel)
-   :success-fn (fn ^Workbook [_ file] (sp/load-workbook-from-file file))))
-
-
-(defn save-excel-as-chooser [^Workbook workbook]
-  (chooser/choose-file
-   :all-files? false
-   :type :save
-   :filters (chooser-f-excel)
-   :success-fn (fn [_ file] (sp/save-workbook-into-file! file workbook))))
-
-
-(defn workbook->header-vec [^Workbook workbook]
-  (some->> workbook
-           (sp/sheet-seq)
-           (first)
-           sp/row-seq
-           first
-           (mapv str)))
-
-#_ (workbook->header-vec (sp/load-workbook-from-file "/home/jare/Desktop/db.xls"))
-
-
-(defn get-workbook-column [^Workbook workbook idx]
-  (some->> workbook
-           (sp/sheet-seq)
-           (first)
-           (sp/row-seq)
-           (map #(str (nth (sp/cell-seq %) idx)))
-           (drop 1)))
-
-#_ (get-workbook-column (sp/load-workbook-from-file "/home/jare/Desktop/db.xls") 0)
 
 
 (defn set-zero-x-y-from-chooser [*state]
@@ -943,3 +902,47 @@
 
 (defn file-tree [*state]
   (make-file-tree-w *state))
+
+
+(defn- chooser-f-excel []
+  [[(j18n/resource ::chooser-f-excel) ["xls" "xlsx"]]])
+
+
+(defn load-excel-from-chooser []
+  (chooser/choose-file
+   :all-files? false
+   :type :open
+   :filters (chooser-f-excel)
+   :success-fn (fn ^Workbook [_ file]
+                 (sp/load-workbook-from-file file))))
+
+
+(defn save-excel-as-chooser [*state ^Workbook workbook]
+  (let [^java.io.File selected-file
+        (show-file-chooser ::save-as
+                           ::chooser-f-excel-xlsx
+                           "xlsx"
+                           (generate-default-filename *state
+                                                      "xlsx"))]
+    (when selected-file
+      (sp/save-workbook-into-file!
+       (.getAbsolutePath selected-file)
+       workbook))))
+
+
+(defn workbook->header-vec [^Workbook workbook]
+  (some->> workbook
+           (sp/sheet-seq)
+           (first)
+           sp/row-seq
+           first
+           (mapv str)))
+
+
+(defn get-workbook-column [^Workbook workbook idx]
+  (some->> workbook
+           (sp/sheet-seq)
+           (first)
+           (sp/row-seq)
+           (map #(str (nth (sp/cell-seq %) idx)))
+           (drop 1)))

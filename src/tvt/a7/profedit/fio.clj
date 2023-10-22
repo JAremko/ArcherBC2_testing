@@ -130,7 +130,7 @@
     (catch Exception e
       (let [err-msg (.getMessage e)]
         (prof/status-err! err-msg)
-        (sc/alert err-msg :type :error))
+        (sc/invoke-now (sc/alert err-msg :type :error)))
       nil)))
 
 
