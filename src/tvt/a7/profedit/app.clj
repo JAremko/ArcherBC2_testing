@@ -163,6 +163,7 @@
                             :columns 4)
                (sc/label :text ::used-function)
                (ball/make-bc-type-sel *pa)
+               (sf/separator)
                (sc/label :text ::function-tab-row-count)
                (w/input-coef-count *pa ball/regen-func-coefs!)])
       :center (ball/make-func-panel *pa))}
