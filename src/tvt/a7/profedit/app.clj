@@ -184,20 +184,13 @@
                          :center (sc/scrollable (w/file-tree *pa))))}]))
 
 
-(defn before-double-colon [s]
-  (let [idx (.indexOf s "::")]
-    (if (>= idx 0)
-      (.substring s 0 idx)
-      s)))
-
-
 (defn mk-firmware-update-dialogue
   [frame {:keys [device serial version] :as entry}]
   (sc/invoke-later
    (let [action (sc/input
                  frame
                  (format (j18n/resource ::firmware-update-text)
-                         (before-double-colon device)
+                         device
                          serial
                          version
                          (:version (:newest-firmware entry)))
