@@ -6,6 +6,7 @@
             [tvt.a7.profedit.config :as conf]
             [dk.ative.docjure.spreadsheet :as sp]
             [j18n.core :as j18n]
+            [seesaw.forms :as sf]
             [clojure.spec.alpha :as s])
   (:import [javax.swing JList]))
 
@@ -43,28 +44,6 @@
        (prof/status-err! ::del-sel-select-for-deletion)))))
 
 
-#_(defn mk-firmware-update-dialogue
-  [frame {:keys [device serial version] :as entry}]
-  (sc/invoke-later
-   (let [action (sc/input
-                 frame
-                 (format (j18n/resource ::firmware-update-text)
-                         device
-                         serial
-                         version
-                         (:version (:newest-firmware entry)))
-                 :title (j18n/resource ::firmware-update-title)
-                 :choices [::update-firmware-now
-                           ::undate-firmware-later]
-                 :value ::update-firmware-now
-                 :type :question
-                 :to-string j18n/resource)]
-     (when (= action ::update-firmware-now)
-       (try
-         (fio/copy-newest-firmware entry)
-         (sc/alert frame (j18n/resource ::firmware-uploaded) :type :info)
-         (catch Exception e (sc/alert frame (.getMessage e) :type :error)))))))
-
 (defn- dist-swapper [state distances]
   (let [zero-dist (nth (prof/get-in-prof state [:distances])
                        (prof/get-in-prof state [:c-zero-distance-idx]))
@@ -75,7 +54,9 @@
       (-> state
           (prof/assoc-in-prof [:distances] new-dist)
           (prof/assoc-in-prof [:c-zero-distance-idx] 0))
-      (throw (Exception. (format "Distances should be in %s units and range from %d to %d" (j18n/resource units) min-v max-v))))))
+      (throw (Exception. (format (j18n/resource ::dist-import-invalid-data-err)
+                                 (j18n/resource units) min-v max-v))))))
+
 
 (defn- import-from-excel [*state]
   (try
@@ -84,18 +65,19 @@
           c-hv (count hv)]
       (cond
         (= 0 c-hv)
-        (throw (Exception. (str "First spreadsheet should have at least one column")))
+        (throw (Exception. (j18n/resource ::dist-import-atleast-one-colum-err)))
 
         (= 1 c-hv)
         (swap! *state dist-swapper (w/get-workbook-column wb 0))
 
         :else
-        (sc/invoke-now (sc/alert "Multi column loading not implemented")))
-    ;; TODO Add succ status
-      )
+        (throw (Exception. (j18n/resource ::dist-import-too-many-colums-err))))
+      (prof/status-ok! ::dist-import-succ-msg))
     (catch Exception e (prof/status-err!
                         (let [em (.getMessage e)]
-                          (if (seq em) em (format "Bad Excel table"))))
+                          (if (seq em)
+                            em
+                            (j18n/resource ::dist-import-bad-table-err))))
            nil)))
 
 
@@ -103,15 +85,16 @@
   (try
     (let [distances (prof/get-in-prof* *state [:distances])
           {:keys [units]} (meta (s/get-spec ::prof/distance))
-          wb (sp/create-workbook "Distances"
-                                 (into [[(format "Distances (%s)"
-                                                 (j18n/resource units))]]
-                                       (map #(vector (str %)))
-                                       distances))]
+          wb (sp/create-workbook
+              (j18n/resource ::dist-export-sheet-title)
+              (into [[(format (j18n/resource ::dist-export-col-title)
+                              (j18n/resource units))]]
+                    (map #(vector (str %)))
+                    distances))]
       (dorun (for [sheet (sp/sheet-seq wb)]
                (sp/auto-size-all-columns! sheet)))
-      (w/save-excel-as-chooser *state wb))
-    ;; TODO Add succ status
+      (w/save-excel-as-chooser *state "dist" wb)
+      (prof/status-ok! ::dist-export-succ-msg))
     (catch Exception e (prof/status-err! (.getMessage e)) nil)))
 
 
@@ -124,11 +107,11 @@
                  :listen [:action (fn [_] (del-selected! *state d-lb))])
 
         btn-e-imp (sc/button
-                   :text "import"
+                   :text (j18n/resource ::dist-import-bnt-text)
                    :listen [:action (fn [_] (import-from-excel *state))])
 
         btn-e-exp (sc/button
-                   :text "export"
+                   :text (j18n/resource ::dist-export-bnt-text)
                    :listen [:action (fn [_] (export-to-excel *state))])]
 
     (sc/border-panel
@@ -152,5 +135,6 @@
                                    conf/key->icon
                                    sc/icon
                                    (sc/label :icon))
-                              (sc/vertical-panel :items [btn-e-imp
-                                                         btn-e-exp])])))))
+                              (sf/forms-panel
+                                "pref"
+                                :items [btn-e-exp btn-e-imp])])))))

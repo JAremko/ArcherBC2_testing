@@ -422,7 +422,7 @@
   (string/replace s #"[^A-Za-z0-9\s\-_]" ""))
 
 
-(defn- generate-default-filename [*state ext]
+(defn- generate-default-filename [*state suf ext]
   (let [{:keys [profile-name cartridge-name]} (:profile @*state)
         sanitized-profile-name (remove-non-latin profile-name)
         sanitized-cartridge-name (remove-non-latin cartridge-name)
@@ -431,7 +431,9 @@
                                "yyyy_MM_dd_HH_mm_ss")))]
     (str sanitized-profile-name "_"
          sanitized-cartridge-name "_"
-         time-str "." ext)))
+         time-str "_"
+         suf
+         "." ext)))
 
 
 (defn save-as-chooser [*state]
@@ -439,6 +441,7 @@
                                          ::chooser-f-prof
                                          "a7p"
                                          (generate-default-filename *state
+                                                                    "prof"
                                                                     "a7p"))]
     (when selected-file
       (save-as *state nil selected-file))))
@@ -487,6 +490,7 @@
                                          ::chooser-f-json
                                          "json"
                                          (generate-default-filename *state
+                                                                    "prof"
                                                                     "json"))]
     (when selected-file
       (export-as *state nil selected-file))))
@@ -917,12 +921,13 @@
                  (sp/load-workbook-from-file file))))
 
 
-(defn save-excel-as-chooser [*state ^Workbook workbook]
+(defn save-excel-as-chooser [*state suf ^Workbook workbook]
   (let [^java.io.File selected-file
         (show-file-chooser ::save-as
                            ::chooser-f-excel-xlsx
                            "xlsx"
                            (generate-default-filename *state
+                                                      suf
                                                       "xlsx"))]
     (when selected-file
       (sp/save-workbook-into-file!
