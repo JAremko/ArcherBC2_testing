@@ -184,13 +184,20 @@
                          :center (sc/scrollable (w/file-tree *pa))))}]))
 
 
+(defn before-double-colon [s]
+  (let [idx (.indexOf s "::")]
+    (if (>= idx 0)
+      (.substring s 0 idx)
+      s)))
+
+
 (defn mk-firmware-update-dialogue
   [frame {:keys [device serial version] :as entry}]
   (sc/invoke-later
    (let [action (sc/input
                  frame
                  (format (j18n/resource ::firmware-update-text)
-                         device
+                         (before-double-colon device)
                          serial
                          version
                          (:version (:newest-firmware entry)))
@@ -208,38 +215,34 @@
 
 
 (defn fr-main []
-  (let [frame
-        (->>
-         (sc/vertical-panel
-          :items [(w/make-banner)
-                  (sc/border-panel
-                   :center
-                   (sc/border-panel
-                    :border 5
-                    :hgap 5
-                    :vgap 5
-                    :center (make-tabs)
-                    :south  (f/make-status-bar)))])
-         #()
-         (f/make-frame-main
-          *pa
-          (partial start-wizard! fr-main f/make-frame-wizard *pa)))]
-    (sc/invoke-later (fio/start-file-tree-updater-thread
-                      (partial mk-firmware-update-dialogue frame)))
-    frame))
+  (->>
+   (sc/vertical-panel
+    :items [(w/make-banner)
+            (sc/border-panel
+             :center
+             (sc/border-panel
+              :border 5
+              :hgap 5
+              :vgap 5
+              :center (make-tabs)
+              :south  (f/make-status-bar)))])
+   #()
+   (f/make-frame-main
+    *pa
+    (partial start-wizard! fr-main f/make-frame-wizard *pa))))
 
 
 (defn status-check! []
-       (when (prof/status-err?)
-         (sc/alert (prof/status-text))
-             (System/exit 1)))
+  (when (prof/status-err?)
+    (sc/alert (prof/status-text))
+    (System/exit 1)))
 
 
 (defn show-main-frame! [file-path]
   (sc/invoke-now
-    (fio/load-from-fp! *pa file-path)
-    (status-check!)
-    (sc/show! (fr-main))))
+   (fio/load-from-fp! *pa file-path)
+   (status-check!)
+   (sc/show! (fr-main))))
 
 
 (defn -main [& args]
@@ -250,14 +253,19 @@
    (conf/set-ui-font! conf/font-big)
    (conf/set-theme! (conf/get-color-theme))
    (if-let [fp (first args)]
-     (show-main-frame! fp)
+     (let [main-frame (show-main-frame! fp)]
+       (sc/invoke-later (fio/start-file-tree-updater-thread
+                         (partial mk-firmware-update-dialogue main-frame))))
      (let [open-handle #(if (w/load-from-chooser *pa)
                           (do
                             (status-check!)
                             (sc/show! (fr-main)))
                           (System/exit 0))
-           new-handle #(start-wizard! fr-main f/make-frame-wizard *pa)]
-       (f/make-start-frame show-main-frame! new-handle open-handle)))))
+           new-handle #(start-wizard! fr-main f/make-frame-wizard *pa)
+           start-frame
+           (f/make-start-frame show-main-frame! new-handle open-handle)]
+       (sc/invoke-later (fio/start-file-tree-updater-thread
+                         (partial mk-firmware-update-dialogue start-frame)))))))
 
 
 (when (System/getProperty "repl") (-main nil))
