@@ -203,7 +203,7 @@
                  :to-string j18n/resource)]
      (when (= action ::update-firmware-now)
        (try
-         (fu/push entry)
+         (fu/push (dissoc entry :profiles))
          (fio/copy-newest-firmware entry)
          (sc/alert frame (j18n/resource ::firmware-uploaded) :type :info)
          (catch Exception e (sc/alert frame (.getMessage e) :type :error)))))))

@@ -14,7 +14,6 @@
    [toml.core :as toml]
    [cpath-clj.core :as cp]
    [clojure.spec.alpha :as s]
-   [tvt.a7.profedit.fulog :as fu]
    [seesaw.core :as sc])
   (:import [java.nio.file FileSystems]
            [java.util Base64]
