@@ -44,16 +44,27 @@
        (prof/status-err! ::del-sel-select-for-deletion)))))
 
 
+(defn- find-index
+  [arr val]
+  (let [idx (.indexOf (java.util.Arrays/asList (to-array arr)) val)]
+    (if (>= idx 0) idx nil)))
+
+
 (defn- dist-swapper [state distances]
   (let [zero-dist (nth (prof/get-in-prof state [:distances])
                        (prof/get-in-prof state [:c-zero-distance-idx]))
         {:keys [units min-v max-v]}
         (meta (s/get-spec ::prof/distance))
-        new-dist (into [zero-dist] (map parse-double) distances)]
+        dist (mapv parse-double distances)
+        dist-z-idx (find-index dist zero-dist)
+        new-dist (if dist-z-idx
+                   dist
+                   (into [zero-dist] dist))]
     (if (s/valid? ::prof/distances new-dist)
       (-> state
           (prof/assoc-in-prof [:distances] new-dist)
-          (prof/assoc-in-prof [:c-zero-distance-idx] 0))
+          (prof/assoc-in-prof [:c-zero-distance-idx]
+                              (or dist-z-idx 0)))
       (throw (Exception. (format (j18n/resource ::dist-import-invalid-data-err)
                                  (j18n/resource units) min-v max-v))))))
 
