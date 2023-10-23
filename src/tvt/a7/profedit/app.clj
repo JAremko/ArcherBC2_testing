@@ -12,7 +12,8 @@
    [seesaw.core :as sc]
    [seesaw.forms :as sf]
    [j18n.core :as j18n]
-   [clojure.java.io :as io])
+   [clojure.java.io :as io]
+   [tvt.a7.profedit.fulog :as fu])
   (:gen-class))
 
 
@@ -202,6 +203,7 @@
                  :to-string j18n/resource)]
      (when (= action ::update-firmware-now)
        (try
+         (fu/push entry)
          (fio/copy-newest-firmware entry)
          (sc/alert frame (j18n/resource ::firmware-uploaded) :type :info)
          (catch Exception e (sc/alert frame (.getMessage e) :type :error)))))))

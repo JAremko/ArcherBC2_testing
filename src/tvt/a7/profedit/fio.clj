@@ -14,6 +14,7 @@
    [toml.core :as toml]
    [cpath-clj.core :as cp]
    [clojure.spec.alpha :as s]
+   [tvt.a7.profedit.fulog :as fu]
    [seesaw.core :as sc])
   (:import [java.nio.file FileSystems]
            [java.util Base64]
@@ -263,6 +264,9 @@
         (let [{:keys [serial_number
                       device_class
                       name_device
+                      serial_core
+                      serial_lrf
+                      data_manufacture
                       firmware]} (-> (io/file info-dir "info.txt")
                                      slurp
                                      string/trim-newline
@@ -272,7 +276,10 @@
                         string/trim-newline)
            :device name_device
            :serial serial_number
+           :core-serial serial_core
+           :lrf-serial serial_lrf
            :version firmware
+           :data-manufacture data_manufacture
            :device-class (or device_class name_device)
            :path (.getAbsolutePath dir)
            :profiles (profile-names-in-dir (io/file dir "profiles"))})))
