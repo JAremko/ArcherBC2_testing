@@ -188,13 +188,14 @@
 (defn mk-firmware-update-dialogue
   [frame {:keys [device serial version] :as entry}]
   (sc/invoke-later
-   (let [action (sc/input
+   (let [new-version (:version (:newest-firmware entry))
+         action (sc/input
                  frame
                  (format (j18n/resource ::firmware-update-text)
                          device
                          serial
                          version
-                         (:version (:newest-firmware entry)))
+                         new-version)
                  :title (j18n/resource ::firmware-update-title)
                  :choices [::update-firmware-now
                            ::undate-firmware-later]
@@ -206,7 +207,7 @@
          (fu/push (-> entry
                       (dissoc :profiles)
                       (dissoc :newest-firmware)
-                      (assoc :new-version version)))
+                      (assoc :new-version new-version)))
          (fio/copy-newest-firmware entry)
          (sc/alert frame (j18n/resource ::firmware-uploaded) :type :info)
          (catch Exception e (sc/alert frame (.getMessage e) :type :error)))))))
