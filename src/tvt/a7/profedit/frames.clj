@@ -303,6 +303,14 @@
                         :icon (conf/key->icon :icon-frame)
                         :on-close :dispose)
 
+        menubar (sc/menubar
+                 :items
+                 (mapv #(sc/config! % :name "")
+                       [(a/act-open! *state frame main-frame)
+                        (a/act-save! *state frame main-frame)
+                        (a/act-save-as! *state frame main-frame)
+                        (a/act-reload! *state frame main-frame)]))
+
         *selected-file-state (atom state)
 
         *selected-file-path (atom cur-fp)
@@ -379,6 +387,7 @@
     (sc/config! fp-label :transfer-handler (mk-th))
 
     (doto frame
+      (sc/config! :menubar menubar)
       (sc/config! :transfer-handler (mk-th))
       (sc/config! :content (sc/border-panel :border (empty-border :thickness 20)
                                             :center content-panel))
