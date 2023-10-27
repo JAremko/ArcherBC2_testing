@@ -1,6 +1,7 @@
 (ns tvt.a7.profedit.frames
   (:require
    [tvt.a7.profedit.profile :as prof]
+   [tvt.a7.profedit.update :refer [get-current-version]]
    [tvt.a7.profedit.widgets :as w]
    [tvt.a7.profedit.actions :as a]
    [tvt.a7.profedit.ballistic :refer [regen-func-coefs!] :as ball]
@@ -193,6 +194,7 @@
 
 (defn make-frame-main [*state wizard-cons content-cons]
   (let [frame (sc/frame
+               :title (format "ArcherBC2 %s" (get-current-version))
                :icon (conf/key->icon :icon-frame)
                :id :frame-main
                :on-close (if (System/getProperty "repl") :dispose :exit))
