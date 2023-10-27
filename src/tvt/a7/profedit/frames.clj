@@ -76,17 +76,18 @@
     (sc/request-focus! first-empty)))
 
 
-(defn- save-new-profile [*state *w-state main-frame-cons]
-  (if (w/save-as-chooser *w-state nil)
+(defn- save-new-profile [*state frame *w-state main-frame-cons]
+  (if (w/save-as-chooser *w-state frame)
     (do (reset! *state (select-keys (deref *w-state) [:profile]))
         (-> (main-frame-cons) sc/pack! sc/show!))
     (reset! fio/*current-fp nil)))
 
 
-(defn- wizard-finalizer [*state *w-state main-frame-cons]
-  (when (and (not (save-new-profile *state *w-state main-frame-cons))
-             (prof/status-err?))
-    (recur *state *w-state main-frame-cons)))
+(defn- wizard-finalizer [*state frame *w-state main-frame-cons]
+  (let [saved? (save-new-profile *state frame *w-state main-frame-cons)]
+    (cond (prof/status-err?) (recur *state frame *w-state main-frame-cons)
+          (not saved?) (System/exit 0)
+          :else nil)))
 
 
 ;; FIXME: The ugliest function I ever wrote X_X
@@ -155,6 +156,7 @@
                               (sc/invoke-later
                                (sc/dispose! frame)
                                (wizard-finalizer *state
+                                                 frame
                                                  *w-state
                                                  main-frame-cons))
                               (do
