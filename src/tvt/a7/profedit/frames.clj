@@ -76,7 +76,7 @@
 
 
 (defn- save-new-profile [*state *w-state main-frame-cons]
-  (if (w/save-as-chooser *w-state)
+  (if (w/save-as-chooser *w-state nil)
     (do (reset! *state (select-keys (deref *w-state) [:profile]))
         (-> (main-frame-cons) sc/pack! sc/show!))
     (reset! fio/*current-fp nil)))
