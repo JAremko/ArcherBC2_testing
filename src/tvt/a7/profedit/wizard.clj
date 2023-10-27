@@ -361,7 +361,7 @@
   (make-bullet-panel *w-state))
 
 
-(defn- make-bc-type-preset-frame []
+(defn- make-bc-type-preset-fragment []
   (let [group (sc/button-group)
         selected (sc/radio :id :g1
                            :text ::coef-func-preset-g1
@@ -406,7 +406,7 @@
     (swap! *w-state upd-fn)))
 
 
-(defn- make-bc-row-count-preset-frame []
+(defn- make-bc-row-count-preset-fragment []
   (let [group (sc/button-group)
         selected (sc/radio :id :single
                            :text ::coef-type-preset-single
@@ -438,6 +438,12 @@
                                               keyword)])
                         selected)))
     cont))
+
+
+(defn make-bc-type-preset-frame []
+  (sc/horizontal-panel
+   :items [(make-bc-type-preset-fragment)
+           (make-bc-row-count-preset-fragment)]))
 
 
 (defn- profile->act-coef-rows [profile]
@@ -627,7 +633,6 @@
    {:cons make-bullet-frame :finalizer finalize-bullet-frame!}
    {:cons make-dist-preset-frame :finalizer (constantly true)}
    {:cons make-bc-type-preset-frame :finalizer (constantly true)}
-   {:cons make-bc-row-count-preset-frame :finalizer (constantly true)}
    {:cons make-coef-frame :finalizer maybe-finalize-coef-frame!}])
 
 
