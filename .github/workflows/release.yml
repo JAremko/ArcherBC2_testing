@@ -198,11 +198,20 @@ jobs:
         name: inno-setup-artifact
         path: ./Output
 
+    - name: Checkout
+      uses: actions/checkout@v2
+
+    - name: Get release description
+      run: |
+        RELEASE_DESC=$(cat .github/workflows/release.md)
+        echo "RELEASE_DESC=$RELEASE_DESC" >> $GITHUB_ENV
+
     - name: Create a Release
       uses: meeDamian/github-release@2.0
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ needs.build.outputs.release_tag }}
+        body: ${{ env.RELEASE_DESC }}
         gzip: false
         files: >
           ./src/${{ needs.build.outputs.win32_zip_name }}
