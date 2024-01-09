@@ -198,11 +198,13 @@ jobs:
         name: inno-setup-artifact
         path: ./Output
 
-    - name: Get release.md
+    - name: Checkout
       uses: actions/checkout@v2
+
+    - name: Get release description
       run: |
-        RELEASE_MD=$(cat .github/workflows/release.md)
-        echo "File content: $RELEASE_MD"
+        RELEASE_DESC=$(cat .github/workflows/release.md)
+        echo "File content: $RELEASE_DESC"
         echo "::set-env name=FILE_CONTENT::$FILE_CONTENT"
 
     - name: Create a Release
@@ -210,10 +212,10 @@ jobs:
       with:
         token: ${{ secrets.GITHUB_TOKEN }}
         tag: ${{ needs.build.outputs.release_tag }}
+        body: ${{ env.RELEASE_DESC }}
         gzip: false
         files: >
           ./src/${{ needs.build.outputs.win32_zip_name }}
           ./src/profedit.jar
           ./Output/ArcherBC2_install_testing.exe
         allow_override: true
-        body: ${{ env.FILE_CONTENT }}
