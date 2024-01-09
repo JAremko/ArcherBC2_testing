@@ -204,8 +204,7 @@ jobs:
     - name: Get release description
       run: |
         RELEASE_DESC=$(cat .github/workflows/release.md)
-        echo "File content: $RELEASE_DESC"
-        echo "::set-env name=FILE_CONTENT::$FILE_CONTENT"
+        echo "RELEASE_DESC=$RELEASE_DESC" >> $GITHUB_ENV
 
     - name: Create a Release
       uses: meeDamian/github-release@2.0
