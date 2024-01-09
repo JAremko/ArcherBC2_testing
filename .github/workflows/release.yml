@@ -198,6 +198,13 @@ jobs:
         name: inno-setup-artifact
         path: ./Output
 
+    - name: Get release.md
+      uses: actions/checkout@v2
+      run: |
+        RELEASE_MD=$(cat .github/workflows/release.md)
+        echo "File content: $RELEASE_MD"
+        echo "::set-env name=FILE_CONTENT::$FILE_CONTENT"
+
     - name: Create a Release
       uses: meeDamian/github-release@2.0
       with:
@@ -209,3 +216,4 @@ jobs:
           ./src/profedit.jar
           ./Output/ArcherBC2_install_testing.exe
         allow_override: true
+        body: ${{ env.FILE_CONTENT }}
