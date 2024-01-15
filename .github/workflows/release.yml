@@ -203,7 +203,8 @@ jobs:
 
     - name: Get release description
       run: |
-        RELEASE_DESC=$(cat .github/workflows/release.md)
+        # RELEASE_DESC=$(cat .github/workflows/release.md)
+        RELEASE_DESC=$(echo "* **[User Guide (English)](doc/user_guide/en/USER_GUIDE_EN.md)**\n* **[Керівництво користувача (Українська)](doc/user_guide/ua/USER_GUIDE_UA.md)**")
         echo "RELEASE_DESC=$RELEASE_DESC" >> $GITHUB_ENV
 
     - name: Create a Release
