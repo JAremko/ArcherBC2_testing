@@ -160,13 +160,13 @@ jobs:
         $Env:SRC="${{ github.workspace }}\src"
         & "$Env:ISCC_PATH" /Qp "${{ github.workspace }}\.github\workflows\install.iss"
       shell: pwsh
-      
+
     - name: Debug file structure
       run: |
         cd ./src
         Get-ChildItem
       shell: pwsh
-      
+
     - name: Copy installer
       run: |
         Copy-Item "${{ github.workspace }}\src\ArcherBC2_install_testing.exe" "${{ github.workspace }}\"
@@ -197,9 +197,6 @@ jobs:
       with:
         name: inno-setup-artifact
         path: ./Output
-
-    - name: Checkout
-      uses: actions/checkout@v2
 
     - name: Create a Release
       uses: meeDamian/github-release@2.0
