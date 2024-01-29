@@ -252,21 +252,28 @@
   (sc/invoke-later
    (conf/set-ui-font! conf/font-big)
    (conf/set-theme! (conf/get-color-theme))
-   (if-let [f-arg (first args)]
-     (if (= f-arg "--repl")
-       (repl)
-       (let [main-frame (show-main-frame! f-arg)] ;; File path
+   (let [farg (first args)]
+     (if (and farg (not= farg "--repl"))
+       (let [main-frame (show-main-frame! farg)]
          (sc/invoke-later (fio/start-file-tree-updater-thread
-                           (partial mk-firmware-update-dialogue main-frame)))))
-     (let [open-handle #(if (w/load-from-chooser *pa nil)
-                          (do
-                            (status-check!)
-                            (sc/show! (fr-main)))
-                          (System/exit 0))
-           new-handle #(start-wizard! fr-main f/make-frame-wizard *pa)
-           start-frame
-           (f/make-start-frame show-main-frame! new-handle open-handle)]
-       (sc/invoke-later (fio/start-file-tree-updater-thread
-                         (partial mk-firmware-update-dialogue start-frame)))))))
+                           (partial mk-firmware-update-dialogue main-frame))))
+       (let [open-handle #(if (w/load-from-chooser *pa nil)
+                            (do
+                              (status-check!)
+                              (sc/show! (fr-main)))
+                            (System/exit 0))
+             new-handle #(start-wizard! fr-main f/make-frame-wizard *pa)
+             start-frame
+             (f/make-start-frame show-main-frame! new-handle open-handle)]
+         (sc/invoke-later (fio/start-file-tree-updater-thread
+                           (partial mk-firmware-update-dialogue start-frame)))))
+     (when (contains? (set args) "--repl")
+       (println (str "Starting REPL\n"
+                     "You can import helpers:\n"
+                     "  (require '[tvt.a7.profedit.repl :as r])\n"
+                     "And use them like so:\n"
+                     "  (r/p-help)"))
+       (future (repl))))))
+
 
 (when (System/getProperty "repl") (-main nil))

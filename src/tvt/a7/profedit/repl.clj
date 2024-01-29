@@ -7,39 +7,24 @@
    [seesaw.core :as sc]
    [j18n.core :as j18n]))
 
+(defn p-help []
+  (println "File Export and Import Functions:")
+  (println "  - p-export [file-path]: Exports the current state to a JSON file at the specified file-path.")
+  (println "  - p-import [file-path]: Imports state from a JSON file located at the specified file-path.")
 
-(defn help []
-  (str
-   "GUI Function:\n"
-   "  - gui: Displays the main application window.\n\n"
+  (println "\nFile Load and Save Functions:")
+  (println "  - p-load [file-path]: Loads state from a binary file located at the specified file-path.")
+  (println "  - p-save [file-path]: Saves the current state to a binary file at the specified file-path.")
+  (println "    Note: The file-path must only contain ASCII characters."))
 
-   "File Export and Import Functions:\n"
-   "  - export [file-path]: Exports the current state to a JSON file at the specified file-path.\n"
-   "  - import [file-path]: Imports state from a JSON file located at the specified file-path.\n\n"
-
-   "File Load and Save Functions:\n"
-   "  - load [file-path]: Loads state from a binary file located at the specified file-path.\n"
-   "  - save [file-path]: Saves the current state to a binary file at the specified file-path.\n"
-   "    Note: The file-path must only contain ASCII characters.\n\n"))
-
-
-(defn gui []
-  (sc/invoke-now
-   (let [frame (app/fr-main)]
-     (-> frame
-         (sc/config! :on-close :dispose)
-         sc/pack!
-         sc/show!))))
-
-
-(defn export [file-path]
+(defn p-export [file-path]
   (sc/invoke-now
    (let [full-fp (fio/ensure-extension file-path ".json")]
      (when-let [pld (select-keys @app/*pa [:profile])]
        (spit full-fp (ros/json-ser pld)) full-fp))))
 
 
-(defn import [file-path]
+(defn p-import [file-path]
   (sc/invoke-now
    (let [str (slurp file-path)
          pld (ros/json-deser str)
@@ -49,7 +34,7 @@
        file-path))))
 
 
-(defn load [file-path]
+(defn p-load [file-path]
   (sc/invoke-now
    (let [bytes (fio/read-byte-array-from-file file-path)
          pld (ros/proto-bin-deser bytes)
@@ -68,7 +53,7 @@
     (.write output-stream byte-array)))
 
 
-(defn save [file-path]
+(defn p-save [file-path]
   (sc/invoke-now
    (when-let [full-fp (fio/ensure-extension file-path ".a7p")]
      (if (fio/ascii-only-name? full-fp)
@@ -76,7 +61,7 @@
          (write-byte-array-to-file
           full-fp
           (ros/proto-bin-ser pld))
-         (load file-path)
+         (p-load file-path)
          (reset! fio/*current-fp full-fp))
        (let [err-str ^String (j18n/resource ::err-non-ascii-file-name)]
          (throw (Exception. err-str)))))))
