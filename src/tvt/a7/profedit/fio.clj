@@ -90,7 +90,7 @@
     byte-array))
 
 
-(defn- state->pld [state]
+(defn state->pld [state]
   (let [pld (select-keys state [:profile])]
     (if (s/valid? ::ros/pld pld)
       pld
@@ -106,7 +106,7 @@
        (string/ends-with? (string/lower-case (fs/base-name file)) ".a7p")))
 
 
-(defn- ensure-extension
+(defn ensure-extension
   [^String file-path ^String extension]
   (let [ext (if (.startsWith extension ".")
               extension
@@ -116,7 +116,7 @@
       (str file-path ext))))
 
 
-(defn- ascii-only-name?
+(defn ascii-only-name?
   [^String file-path]
   (let [file (io/file file-path)
         name (.getName file)
