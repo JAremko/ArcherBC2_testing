@@ -8,6 +8,10 @@
    [j18n.core :as j18n]))
 
 (defn p-help []
+  (println "State")
+  (println "  - p-state: Prints out current app state")
+  (println "  You can modify it by swapping app/*pa atom (see clojure docs),")
+  (println "  dont forget to import it from tvt.a7.profedit.app first!")
   (println "File Export and Import Functions:")
   (println "  - p-export [file-path]: Exports the current state to a JSON file at the specified file-path.")
   (println "  - p-import [file-path]: Imports state from a JSON file located at the specified file-path.")
@@ -67,4 +71,4 @@
          (throw (Exception. err-str)))))))
 
 
-(defn state [] @app/*pa)
+(defn p-state [] @app/*pa)
