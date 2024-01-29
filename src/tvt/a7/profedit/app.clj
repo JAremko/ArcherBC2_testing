@@ -1,5 +1,6 @@
 (ns tvt.a7.profedit.app
   (:require
+   [clojure.main :refer [repl]]
    [tvt.a7.profedit.profile :as prof]
    [tvt.a7.profedit.frames :as f]
    [tvt.a7.profedit.distances :refer [make-dist-panel]]
@@ -251,10 +252,12 @@
   (sc/invoke-later
    (conf/set-ui-font! conf/font-big)
    (conf/set-theme! (conf/get-color-theme))
-   (if-let [fp (first args)]
-     (let [main-frame (show-main-frame! fp)]
-       (sc/invoke-later (fio/start-file-tree-updater-thread
-                         (partial mk-firmware-update-dialogue main-frame))))
+   (if-let [f-arg (first args)]
+     (if (= f-arg "--repl")
+       (repl)
+       (let [main-frame (show-main-frame! f-arg)] ;; File path
+         (sc/invoke-later (fio/start-file-tree-updater-thread
+                           (partial mk-firmware-update-dialogue main-frame)))))
      (let [open-handle #(if (w/load-from-chooser *pa nil)
                           (do
                             (status-check!)
@@ -265,6 +268,5 @@
            (f/make-start-frame show-main-frame! new-handle open-handle)]
        (sc/invoke-later (fio/start-file-tree-updater-thread
                          (partial mk-firmware-update-dialogue start-frame)))))))
-
 
 (when (System/getProperty "repl") (-main nil))
