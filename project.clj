@@ -1,6 +1,6 @@
 (def protobuf-version "3.23.2")
 
-(defproject Profedit "1.20.3"
+(defproject Profedit "1.21.0"
 
   :description "Profile editor"
 
@@ -30,6 +30,7 @@
                  [toml "0.1.4"]
                  [com.github.weisj/darklaf-core "3.0.2"]
                  [org.apache.logging.log4j/log4j-core "2.21.0"]
+                 [instaparse "1.4.12"]
                  [dk.ative/docjure "1.19.0"
                    :exclusions [commons-io
                                 org.apache.commons/commons-compress]]]
