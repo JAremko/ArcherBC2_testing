@@ -124,7 +124,7 @@
     (= (count ascii-chars) (count (.toCharArray name)))))
 
 
-(defn- safe-exec! [fn & args]
+(defn safe-exec! [fn & args]
   (try
     (apply fn args)
     (catch Exception e

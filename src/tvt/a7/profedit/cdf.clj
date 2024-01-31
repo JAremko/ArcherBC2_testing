@@ -1,7 +1,9 @@
 (ns tvt.a7.profedit.cdf
   (:require [tvt.a7.profedit.profile :as prof]
+            [tvt.a7.profedit.fio :as fio]
             [clojure.spec.alpha :as s]
-            [instaparse.core :as insta]))
+            [instaparse.core :as insta]
+            [tvt.a7.profedit.asi :as asi]))
 
 
 (def drg-grammar
@@ -26,6 +28,7 @@
 (defn- convert-to-inches [meters]
   (* meters 39.3701))
 
+
 (defn- convert-to-grains [kilograms]
   (* kilograms 15432.3584))
 
@@ -39,9 +42,12 @@
 
 
 (defn- process-drg-file [file-path]
-  (-> file-path
-      slurp
-      parser))
+  (let [drg (-> file-path
+                slurp
+                parser)]
+    (if-let [failure (insta/get-failure drg)]
+      (throw (Exception. (str failure)))
+      drg)))
 
 
 (defn- process-and-convert [file-path]
@@ -69,9 +75,14 @@
 
 (defn apply-drg-file-to-state! [*state drg-file-path]
   (swap! *state (fn [state]
-                  (let [cdf (process-and-convert drg-file-path)
-                        profile (:profile state)
-                        new-profile (update-profile-with-conversion profile cdf)]
-                    (if (s/valid? ::prof/profile new-profile)
-                      (assoc state :profile new-profile)
-                      state)))))
+                  (fio/safe-exec!
+                   #(let [cdf (process-and-convert drg-file-path)
+                         profile (:profile state)
+                         new-profile (update-profile-with-conversion profile cdf)]
+                     (if (s/valid? ::prof/profile new-profile)
+                       (do
+                         (prof/status-ok! ::drg-imported)
+                         (assoc state :profile new-profile))
+                       (do
+                         (asi/pop-report! (prof/val-explain ::prof/profile new-profile))
+                         state)))))))
