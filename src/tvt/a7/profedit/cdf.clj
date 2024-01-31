@@ -3,10 +3,12 @@
             [tvt.a7.profedit.fio :as fio]
             [clojure.spec.alpha :as s]
             [instaparse.core :as insta]
-            [tvt.a7.profedit.asi :as asi]))
+            [instaparse.failure :as fail]
+            [tvt.a7.profedit.asi :as asi]
+            [seesaw.core :as sc]))
 
 
-(def drg-grammar
+(def ^:private drg-grammar
   "<file>        = header radar-data <any>*
    <header>      = <any>* bullet-desc <ignored>+ <newline>
    <bullet-desc> = (<ignored>+ weight-kg) (<ignored>+ diameter-m) (<ignored>+ length-m)
@@ -46,21 +48,23 @@
                 slurp
                 parser)]
     (if-let [failure (insta/get-failure drg)]
-      (throw (Exception. (str failure)))
+      (do (prof/status-err! (str (with-out-str (fail/pprint-failure failure))))
+          nil)
       drg)))
 
 
 (defn- process-and-convert [file-path]
-  (let [parsed-data (vec (process-drg-file file-path))
-        [[_ weight-str] [_ diameter-str] [_ length-str] radar-data-lines] parsed-data
-        weight-grains (convert-to-grains (Double/parseDouble weight-str))
-        diameter-inches (convert-to-inches (Double/parseDouble diameter-str))
-        length-inches (convert-to-inches (Double/parseDouble length-str))
-        radar-data-map (convert-radar-data-to-map (rest radar-data-lines))]
-    {:weight-grains weight-grains
-     :diameter-inches diameter-inches
-     :length-inches length-inches
-     :radar-data radar-data-map}))
+  (when-let [parsed-data (process-drg-file file-path)]
+    (let [parsed-vec (vec parsed-data)
+          [[_ weight-str] [_ diameter-str] [_ length-str] radar-data-lines] parsed-vec
+          weight-grains (convert-to-grains (Double/parseDouble weight-str))
+          diameter-inches (convert-to-inches (Double/parseDouble diameter-str))
+          length-inches (convert-to-inches (Double/parseDouble length-str))
+          radar-data-map (convert-radar-data-to-map (rest radar-data-lines))]
+      {:weight-grains weight-grains
+       :diameter-inches diameter-inches
+       :length-inches length-inches
+       :radar-data radar-data-map})))
 
 
 (defn- update-profile-with-conversion
@@ -76,13 +80,14 @@
 (defn apply-drg-file-to-state! [*state drg-file-path]
   (swap! *state (fn [state]
                   (fio/safe-exec!
-                   #(let [cdf (process-and-convert drg-file-path)
-                         profile (:profile state)
-                         new-profile (update-profile-with-conversion profile cdf)]
-                     (if (s/valid? ::prof/profile new-profile)
-                       (do
-                         (prof/status-ok! ::drg-imported)
-                         (assoc state :profile new-profile))
-                       (do
-                         (asi/pop-report! (prof/val-explain ::prof/profile new-profile))
-                         state)))))))
+                   #(if-let [cdf (process-and-convert drg-file-path)]
+                      (let [profile (:profile state)
+                            new-profile (update-profile-with-conversion profile cdf)]
+                        (if (s/valid? ::prof/profile new-profile)
+                          (do
+                            (prof/status-ok! ::drg-imported)
+                            (assoc state :profile new-profile))
+                          (do
+                            (asi/pop-report! (prof/val-explain ::prof/profile new-profile))
+                            state)))
+                      state)))))

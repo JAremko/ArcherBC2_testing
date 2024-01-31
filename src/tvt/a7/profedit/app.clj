@@ -153,7 +153,10 @@
       :north
       (sf/forms-panel
        "pref,4dlu,pref"
-       :items [(sc/label :text ::bullet-bullet :class :fat) (sf/next-line)
+       :items [(sc/label :text ::bullet-bullet :class :fat)
+               (sc/button :text ::load-cdf
+                          :listen [:action (fn [_] (w/load-drg-from-chooser *pa))])
+               (sf/next-line)
                (sc/label ::bullet-diameter)
                (w/input-num *pa [:b-diameter] ::prof/b-diameter
                             :columns 4)
