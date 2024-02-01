@@ -1,5 +1,6 @@
 (ns tvt.a7.profedit.wizard
   (:require
+   [tvt.a7.profedit.nullableinp :as ni]
    [seesaw.core :as sc]
    [seesaw.bind :as sb]
    [seesaw.forms :as sf]
@@ -33,40 +34,8 @@
          "")))))
 
 
-(defn create-input [formatter *state vpath spec & opts]
-  (let [{:keys [min-v max-v units fraction-digits]} (meta (s/get-spec spec))
-        wrapped-fmt (w/wrap-formatter
-                     (formatter (partial prof/get-in-prof* *state vpath)
-                                fraction-digits))
-        fmtr (new DefaultFormatterFactory
-                  wrapped-fmt
-                  wrapped-fmt
-                  wrapped-fmt
-                  wrapped-fmt)
-        jf (sc/construct JFormattedTextField fmtr)
-        tooltip-text (format (j18n/resource ::w/input-tooltip-text)
-                             (str min-v), (str max-v))]
-    (sc/config! jf :id :input)
-    (sb/bind *state
-             (sb/some (w/mk-debounced-transform #(prof/get-in-prof % vpath)))
-             (sb/value jf))
-    (w/add-tooltip
-     (sc/horizontal-panel
-      :items
-      (w/add-units
-       (doto jf
-         (w/add-tooltip tooltip-text)
-         (se/listen
-          :focus-lost (partial w/sync-and-commit *state vpath spec)
-          :key-pressed #(when (w/commit-key-pressed? %)
-                          (w/sync-and-commit *state vpath spec %)))
-         (w/opts-on-nonempty-input opts))
-       units))
-     tooltip-text)))
-
-
 (defn input-num [& args]
-  (apply create-input mk-number-fmt args))
+  (apply ni/create-input mk-number-fmt args))
 
 
 (defn- fmt-str
@@ -336,7 +305,7 @@
             (sf/next-line)
             (sc/label ::app/rifle-ratio)
             (input-num *pa [:c-t-coeff] ::prof/c-t-coeff :columns 4)
-            (sc/button :text ::tvt.a7.profedit.calc
+            (sc/button :text ::calculate-c-t-coeff
                        :listen
                        [:action (fn [e]
                                   (calc/show-pwdr-sens-calc-frame

@@ -1,7 +1,7 @@
 (ns tvt.a7.profedit.calc
   (:require [clojure.spec.alpha :as s]
-            [tvt.a7.profedit.wizard :as wz]
             [tvt.a7.profedit.widgets :as w]
+            [tvt.a7.profedit.nullableinp :as ni]
             [seesaw.border :refer [empty-border]]
             [seesaw.forms :as sf]
             [seesaw.core :as sc]
@@ -71,7 +71,7 @@
 
 
 (defn- nulable-input-num [& args]
-  (apply wz/create-input mk-nulable-number-fmt args))
+  (apply ni/create-input mk-nulable-number-fmt args))
 
 
 (defn- make-pwdr-sens-calc-row [*calc-state idx]
