@@ -101,25 +101,29 @@
                              :items (make-pwdr-sens-calc-children *calc-state)))))
 
 
-(def ^:private *c-s (atom (make-pwdr-sens-calc-state)))
-
-
 (defn show-pwdr-sens-calc-frame [*state parent]
-  (try
-    (add-watch *c-s :refresh-*state
-               (fn [_ _ _ new-state]
-                 (let [table (get-in new-state [:profile :pwdr-sens-table])
-                       f-tb (some->> table
-                                     (filter (every-pred :temperature :velocity))
-                                     (sort-by :temperature >)
-                                     (seq)
-                                     (vec))]
-                   (when (>= (count f-tb) 2)
-                     (println (str table))
-                     (println (str f-tb))
-                     (println (str (calculate-percent-change-linear-regression f-tb)))))))
-    (sc/show! (sc/pack! (sc/dialog :parent parent
-                                   :title ::calc-title
-                                   :modal? true
-                                   :content (make-func-coefs *c-s))))
-    (finally (remove-watch *c-s :refresh-*state))))
+  (let [*c-s (atom (make-pwdr-sens-calc-state))]
+    (try
+      (add-watch *c-s :refresh-*state
+                 (fn [_ _ _ new-state]
+                   (let [table (get-in new-state [:profile :pwdr-sens-table])
+                         f-tb (->> table
+                                   (filter (every-pred :temperature :velocity))
+                                   (group-by :temperature)
+                                   (map (fn [[_ entries]] (first entries)))
+                                   (sort-by :temperature >)
+                                   (seq)
+                                   (vec))]
+                     (when (>= (count f-tb) 2)
+                       (println (str table))
+                       (println (str f-tb))
+                       (println (str (calculate-percent-change-linear-regression f-tb)))))))
+      (->> *c-s
+           make-func-coefs
+           (sc/dialog :parent parent
+                      :title ::calc-title
+                      :modal? true
+                      :content)
+           sc/pack!
+           sc/show!)
+      (finally (remove-watch *c-s :refresh-*state)))))
