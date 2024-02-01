@@ -4,6 +4,7 @@
    [seesaw.bind :as sb]
    [seesaw.forms :as sf]
    [seesaw.event :as se]
+   [tvt.a7.profedit.calc :as calc]
    [tvt.a7.profedit.profile :as prof]
    [tvt.a7.profedit.widgets :as w]
    [tvt.a7.profedit.ballistic :as ball]
@@ -320,19 +321,27 @@
 (defn- make-cartridge-panel [*pa]
   (sc/scrollable
    (sf/forms-panel
-    "pref,4dlu,pref"
+    "pref,4dlu,pref,4dlu,pref"
     :items [(sc/label :text ::app/rifle-cartridge-title :class :fat)
             (sf/next-line)
             (sc/label ::app/rifle-muzzle-velocity)
             (input-num *pa
-                         [:c-muzzle-velocity]
-                         ::prof/c-muzzle-velocity :columns 4)
+                       [:c-muzzle-velocity]
+                       ::prof/c-muzzle-velocity :columns 4)
+            (sf/next-line)
             (sc/label ::app/rifle-powder-temperature)
             (input-num *pa
-                         [:c-zero-temperature]
-                         ::prof/c-zero-temperature :columns 4)
+                       [:c-zero-temperature]
+                       ::prof/c-zero-temperature :columns 4)
+            (sf/next-line)
             (sc/label ::app/rifle-ratio)
-            (input-num *pa [:c-t-coeff] ::prof/c-t-coeff :columns 4)])))
+            (input-num *pa [:c-t-coeff] ::prof/c-t-coeff :columns 4)
+            (sc/button :text ::tvt.a7.profedit.calc
+                       :listen
+                       [:action (fn [e]
+                                  (calc/show-pwdr-sens-calc-frame
+                                   *pa
+                                   (sc/to-root e)))])])))
 
 
 (defn- make-bullet-panel [*pa]

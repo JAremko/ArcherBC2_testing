@@ -119,6 +119,9 @@
   (sf/forms-panel
    "pref,4dlu,pref,20dlu,pref,4dlu,pref"
    :items [(sc/label :text ::root-tab-zeroing :class :fat)
+           (sc/button :text "?"
+                      :listen
+                      [:action (fn [_] (w/load-drg-from-chooser *pa))])
            (sf/next-line)
            (sc/label ::general-section-coordinates-zero-x)
            (w/input-0125-mult *pa [:zero-x] ::prof/zero-x :columns 4)
