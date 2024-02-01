@@ -106,8 +106,18 @@
 
 (defn show-pwdr-sens-calc-frame [*state parent]
   (try
-    (add-watch *c-s :refresh-*state (fn [key atom old-state new-state]
-                                     #_ (calculate-percent-change-linear-regression)))
+    (add-watch *c-s :refresh-*state
+               (fn [_ _ _ new-state]
+                 (let [table (get-in new-state [:profile :pwdr-sens-table])
+                       f-tb (some->> table
+                                     (filter (every-pred :temperature :velocity))
+                                     (sort-by :temperature >)
+                                     (seq)
+                                     (vec))]
+                   (when (>= (count f-tb) 2)
+                     (println (str table))
+                     (println (str f-tb))
+                     (println (str (calculate-percent-change-linear-regression f-tb)))))))
     (sc/show! (sc/pack! (sc/dialog :parent parent
                                    :title ::calc-title
                                    :modal? true
