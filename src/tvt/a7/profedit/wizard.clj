@@ -64,7 +64,7 @@
      tooltip-text)))
 
 
-(defn- input-num [& args]
+(defn input-num [& args]
   (apply create-input mk-number-fmt args))
 
 

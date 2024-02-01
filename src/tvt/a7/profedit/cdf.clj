@@ -4,8 +4,7 @@
             [clojure.spec.alpha :as s]
             [instaparse.core :as insta]
             [instaparse.failure :as fail]
-            [tvt.a7.profedit.asi :as asi]
-            [seesaw.core :as sc]))
+            [tvt.a7.profedit.asi :as asi]))
 
 
 (def ^:private drg-grammar
