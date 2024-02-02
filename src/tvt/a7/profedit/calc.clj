@@ -1,5 +1,6 @@
 (ns tvt.a7.profedit.calc
   (:require [clojure.spec.alpha :as s]
+            [j18n.core :as j18n]
             [tvt.a7.profedit.widgets :as w]
             [tvt.a7.profedit.nullableinp :as ni]
             [seesaw.border :refer [empty-border]]
@@ -115,9 +116,14 @@
                                    (seq)
                                    (vec))]
                      (when (>= (count f-tb) 2)
-                       (println (str table))
-                       (println (str f-tb))
-                       (println (str (calculate-percent-change-linear-regression f-tb)))))))
+                       (let [coef (calculate-percent-change-linear-regression f-tb)]
+                         (if (s/valid? ::prof/c-t-coeff coef)
+                           (swap! *state #(assoc-in % [:profile :c-t-coeff] coef))
+                           (prof/status-err! (str
+                                              (j18n/resource ::status-bad-coef-pref)
+                                              " "
+                                              (prof/format-spec-err ::prof/c-t-coeff
+                                                                    coef)))))))))
       (->> *c-s
            make-func-coefs
            (sc/dialog :parent parent
