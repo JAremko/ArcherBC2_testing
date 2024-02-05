@@ -6,8 +6,7 @@
             [seesaw.border :refer [empty-border]]
             [seesaw.forms :as sf]
             [seesaw.core :as sc]
-            [tvt.a7.profedit.profile :as prof]
-            [clojure.pprint :as pprint])
+            [tvt.a7.profedit.profile :as prof])
   (:import [numericutil CustomNumberFormatter]
            [powder SensitivityCalculator]))
 
@@ -85,12 +84,8 @@
   (let [java-array (into-array (map (fn [{:keys [temperature velocity]}]
                                       (into-array Double/TYPE [(double temperature)
                                                                (double velocity)]))
-                                    data))
-        r-v (SensitivityCalculator/calculateSensitivity java-array)]
-    (println "FILTERED INPUT DATA:")
-    (pprint/pprint data)
-    (println "CALCULATED VALUE: " r-v)
-    r-v))
+                                    data))]
+    (SensitivityCalculator/calculateSensitivity java-array)))
 
 
 (defn show-pwdr-sens-calc-frame [*state parent]
