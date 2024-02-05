@@ -6,34 +6,13 @@
             [seesaw.border :refer [empty-border]]
             [seesaw.forms :as sf]
             [seesaw.core :as sc]
-            [tvt.a7.profedit.profile :as prof])
-  (:import [numericutil CustomNumberFormatter]))
+            [tvt.a7.profedit.profile :as prof]
+            [clojure.pprint :as pprint])
+  (:import [numericutil CustomNumberFormatter]
+           [powder SensitivityCalculator]))
 
 
 (def ^:private row-count 10)
-
-
-(defn- mean [vals]
-  (/ (reduce + vals) (count vals)))
-
-
-(defn- linear-regression-coefficients [data]
-  (let [x-mean (mean (map :temperature data))
-        y-mean (mean (map :velocity data))
-        numerator (reduce + (map (fn [{:keys [temperature velocity]}]
-                                   (* (- temperature x-mean) (- velocity y-mean)))
-                                 data))
-        denominator (reduce + (map (fn [{:keys [temperature]}]
-                                     (Math/pow (- temperature x-mean) 2))
-                                   data))]
-    {:m (/ numerator denominator)
-     :b (- y-mean (* (/ numerator denominator) x-mean))}))
-
-
-(defn- calculate-percent-change-linear-regression [data]
-  (let [{:keys [m]} (linear-regression-coefficients data)
-        avg-velocity (mean (map :velocity data))]
-    (* 1500 (/ m avg-velocity))))
 
 
 (defn- make-pwdr-sens-calc-state []
@@ -102,6 +81,18 @@
                              :items (make-pwdr-sens-calc-children *calc-state)))))
 
 
+(defn calculateSensitivity [data]
+  (let [java-array (into-array (map (fn [{:keys [temperature velocity]}]
+                                      (into-array Double/TYPE [(double temperature)
+                                                               (double velocity)]))
+                                    data))
+        r-v (SensitivityCalculator/calculateSensitivity java-array)]
+    (println "FILTERED INPUT DATA:")
+    (pprint/pprint data)
+    (println "CALCULATED VALUE: " r-v)
+    r-v))
+
+
 (defn show-pwdr-sens-calc-frame [*state parent]
   (let [*c-s (atom (make-pwdr-sens-calc-state))]
     (try
@@ -116,7 +107,7 @@
                                    (seq)
                                    (vec))]
                      (when (>= (count f-tb) 2)
-                       (let [coef (calculate-percent-change-linear-regression f-tb)]
+                       (let [coef (calculateSensitivity f-tb)]
                          (if (s/valid? ::prof/c-t-coeff coef)
                            (swap! *state #(assoc-in % [:profile :c-t-coeff] coef))
                            (prof/status-err! (str
