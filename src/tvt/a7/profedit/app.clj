@@ -1,6 +1,7 @@
 (ns tvt.a7.profedit.app
   (:require
    [clojure.main :refer [repl]]
+   [tvt.a7.profedit.calc :as calc]
    [tvt.a7.profedit.profile :as prof]
    [tvt.a7.profedit.frames :as f]
    [tvt.a7.profedit.distances :refer [make-dist-panel]]
@@ -125,7 +126,7 @@
      :content
      (wrp-tab
       #(sf/forms-panel
-        "pref,4dlu,pref"
+        "pref,4dlu,pref,4dlu,pref"
         :items [(sc/label :text ::rifle-cartridge-title :class :fat)
                 (sf/next-line)
                 (sc/label ::rifle-muzzle-velocity)
@@ -133,16 +134,24 @@
                              [:c-muzzle-velocity]
                              ::prof/c-muzzle-velocity
                              :columns 4)
+                (sf/next-line)
                 (sc/label ::rifle-powder-temperature)
                 (w/input-num *pa
                              [:c-zero-temperature]
                              ::prof/c-zero-temperature
                              :columns 4)
+                (sf/next-line)
                 (sc/label ::rifle-ratio)
                 (w/input-num *pa
                              [:c-t-coeff]
                              ::prof/c-t-coeff
-                             :columns 4)]))}
+                             :columns 4)
+                (sc/button :text ::calculate-c-t-coeff
+                           :listen
+                           [:action (fn [e]
+                                      (calc/show-pwdr-sens-calc-frame
+                                       *pa
+                                       (sc/to-root e)))])]))}
 
     {:tip (j18n/resource ::bullet-tab-title)
      :icon (conf/key->icon :tab-icon-bullet)
