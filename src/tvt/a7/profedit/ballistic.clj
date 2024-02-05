@@ -119,7 +119,7 @@
   (sf/forms-panel
    "pref,4dlu,pref,20dlu,pref,4dlu,pref"
    :items [(sc/label :text ::root-tab-zeroing :class :fat)
-           (sc/button :text "?"
+           (sc/button :text ::load-drg-from-file
                       :listen
                       [:action (fn [_] (w/load-drg-from-chooser *pa))])
            (sf/next-line)
