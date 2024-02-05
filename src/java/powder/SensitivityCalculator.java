@@ -9,24 +9,35 @@ public final class SensitivityCalculator {
      * @return The calculated sensitivity as a double value.
      */
     public static double calculateSensitivity(double[][] data) {
-        if (data == null || data.length == 0) {
-            throw new IllegalArgumentException("Data array must not be null or empty.");
-        }
-
-        double sum = 0;
+//        double sum = 0;
         int count = 0;
-        for (int i = 0; i < data.length; i++) {
-            // Assuming the first column is temperature and the second column is velocity.
-            // You can modify the calculation logic based on your sensitivity calculation needs.
-            double temperature = data[i][0];
-            double velocity = data[i][1];
 
-            // Example calculation: simply averaging the sum of temperatures and velocities
-            sum += temperature + velocity;
-            count += 2; // Since we're adding two values for each row
+        if ( data != null && data.length > 1) {
+            double z_t = data[0][0];
+            double z_v = data[0][1];
+            double percentile = 0.0;
+            for (int i = 1; i < data.length; i++) {
+                // Assuming the first column is temperature and the second column is velocity.
+                // You can modify the calculation logic based on your sensitivity calculation needs.
+                double temperature = data[i][0];
+                double velocity = data[i][1];
+                double divider = (temperature - z_t)/15.0;
+                double delta_v = (velocity - z_v)/divider;
+                System.out.print("idx: ");
+                System.out.println(i);
+                System.out.print("Div: ");
+                System.out.print(divider);
+                System.out.print("  delta: ");
+                System.out.print(delta_v);
+                percentile += delta_v*100.0/velocity;
+                System.out.print("  precentile: ");
+                System.out.println(percentile);
+                ++count;
+            }
+            return percentile/count;
         }
 
-        // Calculate the average as a simplistic form of sensitivity
-        return sum / count;
+
+        return 0.0;
     }
 }

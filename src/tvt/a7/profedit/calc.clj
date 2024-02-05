@@ -106,7 +106,7 @@
                                    (sort-by :temperature >)
                                    (seq)
                                    (vec))]
-                     (when (>= (count f-tb) 2)
+                     (when (>= (count f-tb) 1)
                        (let [coef (calculateSensitivity f-tb)]
                          (if (s/valid? ::prof/c-t-coeff coef)
                            (swap! *state #(assoc-in % [:profile :c-t-coeff] coef))
