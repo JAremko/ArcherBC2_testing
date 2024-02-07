@@ -50,10 +50,12 @@
   (let [write-op (fn []
                    (try
                      (let [output-stream (java.io.FileOutputStream. file-path)]
-                       (when (Thread/interrupted)
-                         (throw (InterruptedException. "Thread interrupted before write")))
-                       (.write output-stream byte-array)
-                       (.close output-stream))
+                       (try
+                         (when (Thread/interrupted)
+                           (throw (InterruptedException. "Thread interrupted before write")))
+                         (.write output-stream byte-array)
+                         (finally
+                           (.close output-stream))))
                      (catch InterruptedException _)))
 
         execute-with-timeout
