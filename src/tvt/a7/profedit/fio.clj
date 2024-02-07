@@ -43,7 +43,7 @@
 
 (def ^:private max-retries 10)
 
-(def ^:private timeout-duration 0)
+(def ^:private timeout-duration 1000)
 
 (defn write-byte-array-to-file
   [^String file-path ^bytes byte-array]
