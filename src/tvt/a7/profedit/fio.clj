@@ -29,6 +29,16 @@
 (def ^:private user-profile-dir-name "archer_bc2_profiles")
 
 
+(defn add-current-fp-watcher [kw func]
+   (add-watch *current-fp kw
+              (fn [_ _ _ new-val]
+                (func new-val))))
+
+
+(defn remove-current-fp-watcher [kw]
+  (remove-watch *current-fp kw))
+
+
 (defn get-user-profiles-dir []
   (let [user-home (System/getProperty "user.home")
         dir (io/file user-home user-profile-dir-name)]
@@ -399,7 +409,9 @@
         (when-not (= p-v current-value)
           (reset! *profile-storages current-value)
           (vreset! *previous-value current-value))
-        (swap! *current-fp #(when (fs/readable? %) %))
+        (let [cur-fp @*current-fp]
+          (when-not (fs/readable? cur-fp)
+            (reset! *current-fp nil)))
         (when (seq new-storages)
           (try
             (run! firmware-up-callback
